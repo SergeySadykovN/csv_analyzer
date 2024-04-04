@@ -1,5 +1,6 @@
 import os
 import json
+import csv
 
 
 class PriceMachine:
@@ -9,7 +10,7 @@ class PriceMachine:
         self.result = ''
         self.name_length = 0
     
-    def load_prices(self, file_path=''):
+    def load_prices(self, file_path="C:\Users\Programmer\PycharmProjects\csv_analyzer"):
         '''
             Сканирует указанный каталог. Ищет файлы со словом price в названии.
             В файле ищет столбцы с названием товара, ценой и весом.
@@ -28,6 +29,13 @@ class PriceMachine:
                 масса
                 фасовка
         '''
+
+        self.data = []
+        for filename in os.listdir(file_path):
+            if filename.endswith('.csv') and 'price' in filename.lower():
+                with open(os.path.join(file_path, filename), 'r', encoding='utf-8') as file:
+                    reader = csv.DictReader(file)
+                    print(reader)
         
     def _search_product_price_weight(self, headers):
         '''
