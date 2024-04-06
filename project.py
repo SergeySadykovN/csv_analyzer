@@ -4,13 +4,13 @@ import csv
 
 
 class PriceMachine:
-    
+
     def __init__(self):
         self.data = []
         self.result = ''
         self.name_length = 0
-    
-    def load_prices(self, file_path="C:\Users\Programmer\PycharmProjects\csv_analyzer"):
+
+    def load_prices(self, directory):
         '''
             Сканирует указанный каталог. Ищет файлы со словом price в названии.
             В файле ищет столбцы с названием товара, ценой и весом.
@@ -19,11 +19,11 @@ class PriceMachine:
                 название
                 наименование
                 продукт
-                
+
             Допустимые названия для столбца с ценой:
                 розница
                 цена
-                
+
             Допустимые названия для столбца с весом (в кг.)
                 вес
                 масса
@@ -31,19 +31,19 @@ class PriceMachine:
         '''
 
         self.data = []
-        for filename in os.listdir(file_path):
+        for filename in os.listdir(directory):
             if filename.endswith('.csv') and 'price' in filename.lower():
-                with open(os.path.join(file_path, filename), 'r', encoding='utf-8') as file:
+                with open(os.path.join(directory, filename), 'r', newline='', encoding='utf-8') as file:
                     reader = csv.DictReader(file)
-                    print(reader)
-        
+                    print(str(reader))
+
     def _search_product_price_weight(self, headers):
         '''
             Возвращает номера столбцов
         '''
 
     def export_to_html(self, fname='output.html'):
-        result = '''
+        ''' result =
         <!DOCTYPE html>
         <html>
         <head>
@@ -60,16 +60,27 @@ class PriceMachine:
                     <th>Цена за кг.</th>
                 </tr>
         '''
-    
+
     def find_text(self, text):
         pass
 
-    
-pm = PriceMachine()
-print(pm.load_prices())
+    def user_input(self, directory):
+        self.load_prices(directory)
 
-'''
-    Логика работы программы
-'''
-print('the end')
-print(pm.export_to_html())
+        while True:
+            find_text_value = input('Что найти (или "exit") ?: ')
+            if find_text_value.lower() == 'exit':
+                print('Поиск завершен')
+                break
+            self.find_text(find_text_value)
+
+
+
+
+if __name__ == '__main__':
+    pm = PriceMachine()
+    local_directory = os.path.dirname(os.path.abspath(__file__))
+    pm.user_input(local_directory)
+
+
+
