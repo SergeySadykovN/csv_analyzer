@@ -1,42 +1,27 @@
 import os
-import json
 import csv
 import re
+import tabulate
 
 
 class PriceMachine:
 
     def __init__(self):
-        self.data = []
-        self.result = ''
-        # self.name_length = 0
+        self.data = []  # сохраняем полученные списки строк в список после применения условий и патернов
 
     def load_prices(self, directory):
         '''
-            Сканирует указанный каталог. Ищет файлы со словом price в названии.
-            В файле ищет столбцы с названием товара, ценой и весом.
-            Допустимые названия для столбца с товаром:
-                товар
-                название
-                наименование
-                продукт
+        Сканирует указанный путь к каталогу. Ищет файлы со словом price в названии.
+        В файле ищет столбцы с названием товара, ценой и весом.
+        Возвращает список из списков со строками удовлетворяющим патернам
 
-            Допустимые названия для столбца с ценой:
-                розница
-                цена
-
-            Допустимые названия для столбца с весом (в кг.)
-                вес
-                масса
-                фасовка
+        :param directory: file path from user_input
+        :return: self.data = [[filename, product, price, weight, price/kg)]
         '''
-
-        self.data = []
         for filename in os.listdir(directory):
             if filename.endswith('.csv') and 'price' in filename.lower():
                 with open(os.path.join(directory, filename), 'r', newline='', encoding='utf-8') as file:
                     reader = csv.DictReader(file)
-                    print(str(reader))
                     for row in reader:
                         for column in row:
                             if re.search(r'(товар|название|наименование|продукт)', column, re.IGNORECASE):
@@ -45,60 +30,58 @@ class PriceMachine:
                                 price = float(row[column].replace(',', '.').strip())
                             elif re.search(r'(вес|масса|фасовка)', column, re.IGNORECASE):
                                 weight = float(row[column].replace(',', '.').strip())
-
                         if product:
-                            self.data.append([filename, product, price, weight, round(price / weight,3)])
-        print(self.data)
+                            self.data.append([filename, product, price, weight, round(price / weight, 2)])
 
+    def export_to_html(self, sorted_results):
+        """
+        Функция принимает подготовленный  список от поисковика search_ingine,
+        добавляет заголовоки для таблицы, записывает файл
+        :param sorted_results: list
+        :return: write file *.html
+        """
+        file_name = 'Out data.html'
+        headers = ['№', 'Наименование', 'Цена', 'Вес', 'Цена\кг.', 'Файл']
+        results_num = [[i + 1] + res[1:] + [res[0]] for i, res in enumerate(sorted_results)]
+        data_table = tabulate.tabulate(results_num, headers=headers)
+        print(tabulate.tabulate(results_num, headers=headers, tablefmt='simple'))
+        with open(file_name, 'w', encoding='utf8') as file:
+            file.write(data_table)
 
-
-
-    def _search_product_price_weight(self, headers):
+    def search_engine(self, input_text):
         '''
-            Возвращает номера столбцов
+        Ищет переданное слово от пользователя в списке от load_price(self.data)
+        Возвращает отсортированный результат поиска на экспорт и в консоль
+        :param input_text: value(text) from user_input_find_text
+        :return: sorted_results
         '''
-        print(headers)
+        results = []
+        for row in self.data:
+            if re.search(input_text, row[1], re.IGNORECASE):  # поиск по столбцу с названием
+                results.append(row)
+        sorted_results = sorted(results, key=lambda x: x[4])  # сортировка по цене за кг
 
-    def export_to_html(self, fname='output.html'):
-        result = ''' 
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Позиции продуктов</title>
-        </head>
-        <body>
-            <table>
-                <tr>
-                    <th>Номер</th>
-                    <th>Название</th>
-                    <th>Цена</th>
-                    <th>Фасовка</th>
-                    <th>Файл</th>
-                    <th>Цена за кг.</th>
-                </tr>
-        '''
+        self.export_to_html(sorted_results)  # передаем остротированный результат на экспорт
 
-    def find_text(self, text):
-        find_text = self._search_product_price_weight(text)
-        pass
+    def user_input(self, file_path):
+        """
+        Функция осуществляет ввод пользователя и передает искомое значение в поисковик search_engine
+        А так же принимает абсолютный путь к папке с файлами и передает в загрузчик load_prices
 
-    def user_input(self, directory):
-        self.load_prices(directory)
+        :param file_path: file path
+        :return: value(text)
+        """
+        self.load_prices(file_path)  # передаем путь папки в загрузчик load_prices
 
         while True:
-            find_text_value = input('Что найти (или "exit") ?: ')
-            if find_text_value.lower() == 'exit':
+            find_text_value = input('Что найти ("exit" или "выход" чтобы закончить работу) ?: \n')
+            if find_text_value.lower() == 'exit' or find_text_value.lower() == 'выход':
                 print('Поиск завершен')
                 break
-            self.find_text(find_text_value)
-
-
+            self.search_engine(find_text_value)  # передаем введненное слово в поисковик
 
 
 if __name__ == '__main__':
     pm = PriceMachine()
-    local_directory = os.path.dirname(os.path.abspath(__file__))
+    local_directory = os.path.dirname(os.path.abspath(__file__))  # абсолютный путь к файлам
     pm.user_input(local_directory)
-
-
-
