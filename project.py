@@ -1,6 +1,7 @@
 import os
 import json
 import csv
+import re
 
 
 class PriceMachine:
@@ -8,7 +9,7 @@ class PriceMachine:
     def __init__(self):
         self.data = []
         self.result = ''
-        self.name_length = 0
+        # self.name_length = 0
 
     def load_prices(self, directory):
         '''
@@ -36,14 +37,30 @@ class PriceMachine:
                 with open(os.path.join(directory, filename), 'r', newline='', encoding='utf-8') as file:
                     reader = csv.DictReader(file)
                     print(str(reader))
+                    for row in reader:
+                        for column in row:
+                            if re.search(r'(товар|название|наименование|продукт)', column, re.IGNORECASE):
+                                product = row[column].strip()
+                            elif re.search(r'(розница|цена)', column, re.IGNORECASE):
+                                price = float(row[column].replace(',', '.').strip())
+                            elif re.search(r'(вес|масса|фасовка)', column, re.IGNORECASE):
+                                weight = float(row[column].replace(',', '.').strip())
+
+                        if product:
+                            self.data.append([filename, product, price, weight, round(price / weight,3)])
+        print(self.data)
+
+
+
 
     def _search_product_price_weight(self, headers):
         '''
             Возвращает номера столбцов
         '''
+        print(headers)
 
     def export_to_html(self, fname='output.html'):
-        ''' result =
+        result = ''' 
         <!DOCTYPE html>
         <html>
         <head>
@@ -62,6 +79,7 @@ class PriceMachine:
         '''
 
     def find_text(self, text):
+        find_text = self._search_product_price_weight(text)
         pass
 
     def user_input(self, directory):
