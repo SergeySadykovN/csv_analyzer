@@ -33,20 +33,57 @@ class PriceMachine:
                         if product:
                             self.data.append([filename, product, price, weight, round(price / weight, 2)])
 
-    def export_to_html(self, sorted_results):
-        """
+    def export_to_html(self, sorted_result):
+        '''
         Функция принимает подготовленный  список от поисковика search_ingine,
-        добавляет заголовоки для таблицы, записывает файл
-        :param sorted_results: list
-        :return: write file *.html
-        """
-        file_name = 'Out data.html'
+        добавляет заголовоки для таблицы, записывает файл и выводит в консоль
+        :param sorted_result: list
+         :return: write file *.html
+        '''
+        # Инициализируем  HTML
+        result = '''
+                <!DOCTYPE html>
+                <html>
+                <head>
+                <meta charset="utf-8">
+                <title>Позиции продуктов</title>
+                </head>
+                <body>
+                <table>
+                    <tr>
+                        <th>Номер</th>
+                        <th>Название</th>
+                        <th>Цена</th>
+                        <th>Фасовка</th>
+                        <th>Файл</th>
+                        <th>Цена за кг.</th>
+                    </tr>
+                '''
+        index = 0  # нумеруем позиции
+        for i in sorted_result:
+            index += 1
+            result += f'''
+                <tr>
+                    <td>{index}</td> 
+                            <td>{i[1]}</td> 
+                            <td>{i[2]}</td>
+                            <td>{i[3]}{' кг'}</td>
+                            <td>{i[0]}</td>
+                            <td>{i[4]}</td>                        
+                        </tr>
+                    '''
+        result += '''
+        </table>
+        </body>
+        </html>
+        '''
+        with open('Out data.html', 'w', encoding='utf8') as file:
+            file.write(result)
+
+        # вывод в консоль:
         headers = ['№', 'Наименование', 'Цена', 'Вес', 'Цена\кг.', 'Файл']
-        results_num = [[i + 1] + res[1:] + [res[0]] for i, res in enumerate(sorted_results)]
-        data_table = tabulate.tabulate(results_num, headers=headers)
+        results_num = [[i + 1] + res[1:] + [res[0]] for i, res in enumerate(sorted_result)]  # нумеруем строчки
         print(tabulate.tabulate(results_num, headers=headers, tablefmt='simple'))
-        with open(file_name, 'w', encoding='utf8') as file:
-            file.write(data_table)
 
     def search_engine(self, input_text):
         '''
@@ -60,7 +97,6 @@ class PriceMachine:
             if re.search(input_text, row[1], re.IGNORECASE):  # поиск по столбцу с названием
                 results.append(row)
         sorted_results = sorted(results, key=lambda x: x[4])  # сортировка по цене за кг
-
         self.export_to_html(sorted_results)  # передаем остротированный результат на экспорт
 
     def user_input(self, file_path):
